@@ -3,6 +3,8 @@ from django.views.generic import ListView
 from django.shortcuts import render, get_object_or_404
 from django.core.mail import send_mail
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Count
+
 from taggit.models import Tag
 
 from . import forms
@@ -34,7 +36,7 @@ def post_list(request, tag_slug=None):
 	except EmptyPage:
 		posts = paginator.page(paginator.num_pages)
 
-	args = {'posts': posts, 'page': page}
+	args = {'posts': posts, 'page': page, 'tag': tag}
 	return render(request, 'blog/post/list.html', args)
 
 
@@ -53,11 +55,18 @@ def post_details(request, year, month, day, post):
 	else:
 		comment_form = forms.CommentForm()
 	
+	post_tags_ids = post.tags.values_list('id', flat=True)
+	simmilar_posts = models.Post.published.filter(tags__in=post_tags_ids)\
+		.exclude(id=post.id)
+	simmilar_posts = simmilar_posts.annotate(same_tags=Count('tags'))\
+		.order_by('-same_tags', '-publish')[:4]
+
 	args = {
 		'post': post,
 		'comments': comments,
 		'new_comment': new_comment,
-		'comment_form': comment_form
+		'comment_form': comment_form,
+		'simmilar_posts': simmilar_posts
 	}
 	return render(request, 'blog/post/details.html', args)
 

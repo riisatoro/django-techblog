@@ -7,6 +7,13 @@
 	{{ post.body|linebreaks }}
 	<p><a href="{% url "blog:post_share" post.id %}">Share this post</a></p>
 
+	{% if simmilar_posts %}
+		<h2>Похожие статьи</h2>
+		{% for post in simmilar_posts %}
+			<h3 class="simmilar"> {{ post.title }}</h3>
+		{% endfor %}
+	{% endif %}
+
 	{% with comments.count as total_comments %}
 		<h2>{{ total_comments }} comment{{ total_comments|pluralize }}</h2>
 	{% endwith %}
