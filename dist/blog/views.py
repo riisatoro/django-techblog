@@ -3,20 +3,27 @@ from django.views.generic import ListView
 from django.shortcuts import render, get_object_or_404
 from django.core.mail import send_mail
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from taggit.models import Tag
 
 from . import forms
 from . import models
 
+'''
 class PostListView(ListView):
 	queryset = models.Post.published.all()
 	context_object_name = 'posts'
 	paginate_by = 4
 	template_name = 'blog/post/list.html'
-
-#same as PostListView class
 '''
-def post_list(request):
+
+def post_list(request, tag_slug=None):
 	post_objects = models.Post.published.all()
+
+	tag = None
+	if tag_slug:
+		tag = get_object_or_404(Tag, slug=tag_slug)
+		post_objects = post_objects.filter(tags__in=[tag])
+
 	paginator = Paginator(post_objects, 3) #3 post per page
 	page = request.GET.get('page')
 
@@ -29,7 +36,7 @@ def post_list(request):
 
 	args = {'posts': posts, 'page': page}
 	return render(request, 'blog/post/list.html', args)
-'''
+
 
 def post_details(request, year, month, day, post):
 	post = get_object_or_404(
